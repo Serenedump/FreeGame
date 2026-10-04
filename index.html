@@ -2306,6 +2306,54 @@
 <style id="no-admin">
 #adminEntryBtn, .admin-link, #adminPendingBadge, #screen-admin, #floatingPendingBtn { display: none !important; }
 </style>
+<style id="no-fishing">#screen-fishing { display: none !important; }</style>
+<style id="candy-match-css">
+  #screen-candy .cm-wrap { position: relative; padding: 14px 12px; }
+  .cm-stats { display: flex; gap: 8px; margin-bottom: 10px; }
+  .cm-stat { flex: 1; text-align: center; padding: 8px 4px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); }
+  .cm-stat span { display: block; font-size: 10px; letter-spacing: 1px; color: var(--muted); }
+  .cm-stat b { font-family: 'Baloo 2', sans-serif; font-size: 20px; color: #fff; }
+  .cm-goal { margin-bottom: 10px; }
+  .cm-goal-bar { height: 10px; border-radius: 99px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .cm-goal-bar span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#ff7aa8,#ffd24d); border-radius: 99px; transition: width .3s ease; }
+  .cm-goal-text { font-size: 11.5px; color: var(--muted); margin-top: 4px; text-align: center; }
+  .cm-board { position: relative; width: 100%; aspect-ratio: 1 / 1; touch-action: none; user-select: none; -webkit-user-select: none;
+    border-radius: 16px; padding: 0; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; }
+  .cm-tile { position: absolute; width: 12.5%; height: 12.5%; padding: 2%; box-sizing: border-box;
+    transition: left .2s ease, top .25s cubic-bezier(.3,.7,.4,1); will-change: left, top; cursor: pointer; }
+  .cm-tile i { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 32%;
+    font-style: normal; font-weight: 800; color: rgba(255,255,255,0.92); font-size: clamp(12px, 4.2vw, 22px);
+    box-shadow: inset 0 -4px 6px rgba(0,0,0,0.28), inset 0 3px 5px rgba(255,255,255,0.45), 0 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4); transition: transform .15s ease, opacity .2s ease; position: relative; overflow: hidden; }
+  .cm-tile.t0 i { background: radial-gradient(circle at 35% 30%, #ff9bb0, #e8264f 70%); }
+  .cm-tile.t1 i { background: radial-gradient(circle at 35% 30%, #ffc27a, #f57c00 70%); }
+  .cm-tile.t2 i { background: radial-gradient(circle at 35% 30%, #fff39a, #e9c20c 70%); }
+  .cm-tile.t3 i { background: radial-gradient(circle at 35% 30%, #a8f5a0, #2fa83a 70%); }
+  .cm-tile.t4 i { background: radial-gradient(circle at 35% 30%, #9fd2ff, #2a6fe0 70%); }
+  .cm-tile.t5 i { background: radial-gradient(circle at 35% 30%, #e0b3ff, #8a35d6 70%); }
+  .cm-tile.sel i { transform: scale(1.12); box-shadow: 0 0 0 3px #fff, 0 0 14px 4px rgba(255,255,255,0.7); }
+  .cm-tile.pop i { transform: scale(0); opacity: 0; transition: transform .2s ease, opacity .2s ease; }
+  .cm-tile.hint i { animation: cmHint .7s ease-in-out 3; }
+  @keyframes cmHint { 50% { transform: scale(1.18); } }
+  .cm-tile.sh i::after { content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.75) 0 3px, transparent 3px 7px); mix-blend-mode: overlay; }
+  .cm-tile.sv i::after { content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.75) 0 3px, transparent 3px 7px); mix-blend-mode: overlay; }
+  .cm-tile.sh i, .cm-tile.sv i { box-shadow: inset 0 -4px 6px rgba(0,0,0,0.28), inset 0 3px 5px rgba(255,255,255,0.45), 0 0 8px 2px rgba(255,255,255,0.55); }
+  .cm-tile.sb i { border-radius: 50%; color: #fff; background: conic-gradient(#ff3b6b, #ffb300, #53d74f, #2ac3ff, #a64bff, #ff3b6b);
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.7), 0 0 12px 3px rgba(255,255,255,0.6); animation: cmSpin 3s linear infinite; }
+  @keyframes cmSpin { to { filter: hue-rotate(360deg); } }
+  .cm-msg { text-align: center; min-height: 20px; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+  .cm-overlay { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.65); border-radius: inherit; padding: 16px; }
+  .cm-overlay[hidden] { display: none; }
+  .cm-card { text-align: center; background: linear-gradient(180deg, #3a0000, #1c0000); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px; padding: 22px 18px; width: 100%; max-width: 320px; }
+  .cm-card-icon { font-size: 44px; }
+  .cm-card h2 { margin: 6px 0; font-family: 'Baloo 2', sans-serif; color: #fff; }
+  .cm-card p { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+  .cm-card .again-btn, .cm-card .home-btn { display: block; width: 100%; margin: 8px 0 0; }
+</style>
 </head>
 <body>
   <!-- Floating pending-receipts counter — visible on every screen (not just the
@@ -2572,13 +2620,13 @@
           <button class="seat menu-card" data-target="screen-memory"><span class="seat-icon">🃏</span><span class="seat-name">Memory Match</span></button>
           <button class="seat menu-card" data-target="screen-spotdiff"><span class="seat-icon">🔍</span><span class="seat-name">Spot the Difference</span></button>
           <button class="seat menu-card" data-target="screen-delivery"><span class="seat-icon">🏍️</span><span class="seat-name">Delivery Run</span></button>
-          <button class="seat menu-card" data-target="screen-fishing"><span class="seat-icon">🎣</span><span class="seat-name">Fishing</span></button>
           <button class="seat menu-card" data-target="screen-balloon"><span class="seat-icon">🎈</span><span class="seat-name">Balloon Pop</span></button>
           <button class="seat menu-card" data-target="screen-connect4"><span class="seat-icon">🔴</span><span class="seat-name">4 in a Row</span></button>
           <button class="seat menu-card" data-target="screen-tetris"><span class="seat-icon">🧱</span><span class="seat-name">Tetris</span></button>
           <button class="seat menu-card" data-target="screen-fruitmerge"><span class="seat-icon">🍉</span><span class="seat-name">Fruit Merge</span></button>
           <button class="seat menu-card" data-target="screen-picturesort"><span class="seat-icon">🎨</span><span class="seat-name">Color Sort</span></button>
           <button class="seat menu-card" data-target="screen-fourpics"><span class="seat-icon">🖼️</span><span class="seat-name">4 Pics 1 Word</span></button>
+          <button class="seat menu-card" data-target="screen-candy"><span class="seat-icon">🍬</span><span class="seat-name">Candy Match</span></button>
         </div>
       </div>
 
@@ -2869,6 +2917,35 @@
       </div>
       <div class="bln2-field" id="bln2-field">
         <svg class="bln2-line" id="bln2-line"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CANDY MATCH ============ -->
+  <div class="screen" id="screen-candy">
+    <button class="back-btn" data-home>← Back to games</button>
+    <div class="header">
+      <div class="icon">🍬</div>
+      <h1>Candy Match</h1>
+      <p>Swap neighbouring candies to match 3 or more. Match 4 for a striped candy, 5 for a rainbow bomb!</p>
+    </div>
+    <div class="game-wrap cm-wrap">
+      <div class="cm-stats">
+        <div class="cm-stat"><span>LEVEL</span><b id="cm-level">1</b></div>
+        <div class="cm-stat"><span>SCORE</span><b id="cm-score">0</b></div>
+        <div class="cm-stat"><span>MOVES</span><b id="cm-moves">0</b></div>
+      </div>
+      <div class="cm-goal"><div class="cm-goal-bar"><span id="cm-goalBar"></span></div><div class="cm-goal-text" id="cm-goalText">Goal: 0</div></div>
+      <div class="cm-board" id="cm-board"></div>
+      <p class="cm-msg" id="cm-msg">&nbsp;</p>
+      <div class="cm-overlay" id="cm-overlay" hidden>
+        <div class="cm-card">
+          <div class="cm-card-icon" id="cm-ovIcon">🎉</div>
+          <h2 id="cm-ovTitle">Level cleared!</h2>
+          <p id="cm-ovText"></p>
+          <button class="again-btn" id="cm-ovBtn">Next level</button>
+          <button class="home-btn" data-home>Other games</button>
+        </div>
       </div>
     </div>
   </div>
@@ -7720,6 +7797,232 @@ const PICS = [
 })();
 
 </script>
+<script>
+(function () {
+  const N = 8, TYPES = 6, GLYPH = ['♥', '▲', '●', '◆', '■', '★'];
+  const screen = document.getElementById('screen-candy');
+  if (!screen) return;
+  const board = document.getElementById('cm-board');
+  const $ = (id) => document.getElementById(id);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let grid, level = 1, score = 0, moves = 0, goal = 0, busy = false, over = false, selected = null, uid = 0, drag = null;
+
+  const goalFor = (l) => 800 + (l - 1) * 600;
+  const movesFor = (l) => Math.max(14, 24 - Math.floor((l - 1) / 2));
+  const rnd = () => Math.floor(Math.random() * TYPES);
+  const inb = (r, c) => r >= 0 && r < N && c >= 0 && c < N;
+
+  function place(t, r, c) { t.r = r; t.c = c; t.el.style.left = (c * 12.5) + '%'; t.el.style.top = (r * 12.5) + '%'; grid[r][c] = t; }
+  function paint(t) {
+    t.el.className = 'cm-tile t' + t.t + (t.s ? ' s' + t.s : '') + (t === selected ? ' sel' : '');
+    t.el.firstChild.textContent = t.s === 'b' ? '✦' : GLYPH[t.t];
+  }
+  function mk(type, r, c, fromRow) {
+    const el = document.createElement('div');
+    el.appendChild(document.createElement('i'));
+    const t = { id: ++uid, t: type, s: '', el, r: 0, c: 0 };
+    el._tile = t;
+    board.appendChild(el);
+    paint(t);
+    if (fromRow !== undefined) { el.style.transition = 'none'; el.style.left = (c * 12.5) + '%'; el.style.top = (fromRow * 12.5) + '%'; void el.offsetHeight; el.style.transition = ''; }
+    place(t, r, c);
+    return t;
+  }
+
+  function newBoard() {
+    board.innerHTML = '';
+    grid = Array.from({ length: N }, () => Array(N).fill(null));
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      let ty;
+      do { ty = rnd(); } while (
+        (c >= 2 && grid[r][c-1].t === ty && grid[r][c-2].t === ty) ||
+        (r >= 2 && grid[r-1][c].t === ty && grid[r-2][c].t === ty));
+      mk(ty, r, c);
+    }
+    if (!hasMove()) newBoard();
+  }
+
+  /* ---- match finding ---- */
+  function findRuns() {
+    const runs = [];
+    for (let r = 0; r < N; r++) {
+      let c = 0;
+      while (c < N) {
+        let e = c; const a = grid[r][c];
+        while (e + 1 < N && a && grid[r][e+1] && grid[r][e+1].t === a.t && !(a.s === 'b') && !(grid[r][e+1].s === 'b')) e++;
+        if (a && a.s !== 'b' && e - c >= 2) { const cells = []; for (let k = c; k <= e; k++) cells.push([r, k]); runs.push({ cells, dir: 'h' }); }
+        c = e + 1;
+      }
+    }
+    for (let c = 0; c < N; c++) {
+      let r = 0;
+      while (r < N) {
+        let e = r; const a = grid[r][c];
+        while (e + 1 < N && a && grid[e+1][c] && grid[e+1][c].t === a.t && !(a.s === 'b') && !(grid[e+1][c].s === 'b')) e++;
+        if (a && a.s !== 'b' && e - r >= 2) { const cells = []; for (let k = r; k <= e; k++) cells.push([k, c]); runs.push({ cells, dir: 'v' }); }
+        r = e + 1;
+      }
+    }
+    return runs;
+  }
+  function hasMove() {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      if (grid[r][c] && grid[r][c].s === 'b') return true;
+      for (const [dr, dc] of [[0,1],[1,0]]) {
+        const r2 = r + dr, c2 = c + dc;
+        if (!inb(r2, c2)) continue;
+        swapData(r, c, r2, c2);
+        const ok = findRuns().length > 0;
+        swapData(r, c, r2, c2);
+        if (ok) return [r, c, r2, c2];
+      }
+    }
+    return false;
+  }
+  function swapData(r1, c1, r2, c2) {
+    const a = grid[r1][c1], b = grid[r2][c2];
+    grid[r1][c1] = b; grid[r2][c2] = a;
+    if (a) { a.r = r2; a.c = c2; } if (b) { b.r = r1; b.c = c1; }
+  }
+
+  /* ---- clearing ---- */
+  function expand(set) {
+    // trigger specials inside the set (chain reaction)
+    const queue = [...set].map((k) => k.split(',').map(Number)); const seen = new Set(set);
+    const add = (r, c) => { const k = r + ',' + c; if (!seen.has(k) && inb(r, c) && grid[r][c]) { seen.add(k); queue.push([r, c]); } };
+    while (queue.length) {
+      const [r, c] = queue.pop(); const t = grid[r][c]; if (!t) continue;
+      if (t.s === 'h') for (let k = 0; k < N; k++) add(r, k);
+      else if (t.s === 'v') for (let k = 0; k < N; k++) add(k, c);
+      else if (t.s === 'b') for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (grid[i][j] && grid[i][j].t === t.t) add(i, j);
+    }
+    return seen;
+  }
+  async function clearCells(set, keep) {
+    const full = expand(set);
+    keep.forEach((k) => full.delete(k.key));
+    let n = 0;
+    full.forEach((k) => { const [r, c] = k.split(',').map(Number); const t = grid[r][c]; if (t) { t.el.classList.add('pop'); n++; } });
+    await sleep(210);
+    full.forEach((k) => { const [r, c] = k.split(',').map(Number); const t = grid[r][c]; if (t) { t.el.remove(); grid[r][c] = null; } });
+    keep.forEach((k) => { const t = grid[k.r][k.c]; if (t) { t.s = k.s; paint(t); } });
+    return n;
+  }
+  async function gravity() {
+    for (let c = 0; c < N; c++) {
+      let w = N - 1;
+      for (let r = N - 1; r >= 0; r--) if (grid[r][c]) { const t = grid[r][c]; if (w !== r) { grid[r][c] = null; place(t, w, c); } w--; }
+      for (let r = w, k = 1; r >= 0; r--, k++) mk(rnd(), r, c, -k);
+    }
+    await sleep(300);
+  }
+  async function resolve(swapCells) {
+    let combo = 0;
+    for (;;) {
+      const runs = findRuns();
+      if (!runs.length) break;
+      combo++;
+      const set = new Set(), keep = [];
+      runs.forEach((run) => {
+        run.cells.forEach(([r, c]) => set.add(r + ',' + c));
+        if (run.cells.length >= 4) {
+          let pick = run.cells.find(([r, c]) => swapCells.some(([a, b]) => a === r && b === c)) || run.cells[Math.floor(run.cells.length / 2)];
+          const t = grid[pick[0]][pick[1]];
+          if (t && !t.s) keep.push({ key: pick[0] + ',' + pick[1], r: pick[0], c: pick[1], s: run.cells.length >= 5 ? 'b' : (run.dir === 'h' ? 'v' : 'h') });
+        }
+      });
+      const cleared = await clearCells(set, keep);
+      addScore(cleared * 10 * combo);
+      if (combo > 1) msg('Combo x' + combo + '!');
+      await gravity();
+      swapCells = [];
+    }
+    return combo;
+  }
+
+  /* ---- UI state ---- */
+  function msg(t) { $('cm-msg').textContent = t || '\u00a0'; }
+  function addScore(n) { score += n; updateHud(); }
+  function updateHud() {
+    $('cm-level').textContent = level; $('cm-score').textContent = score; $('cm-moves').textContent = moves;
+    $('cm-goalBar').style.width = Math.min(100, score / goal * 100) + '%';
+    $('cm-goalText').textContent = 'Goal: ' + goal + ' points';
+  }
+  function select(t) { const old = selected; selected = t; if (old) paint(old); if (t) paint(t); }
+
+  async function trySwap(a, b) {
+    if (busy || over) return;
+    busy = true; select(null); msg('');
+    const [r1, c1, r2, c2] = [a.r, a.c, b.r, b.c];
+    swapData(r1, c1, r2, c2); place(a, a.r, a.c); place(b, b.r, b.c);
+    await sleep(220);
+    const bomb = a.s === 'b' || b.s === 'b';
+    if (!bomb && !findRuns().length) {
+      swapData(r1, c1, r2, c2); place(a, a.r, a.c); place(b, b.r, b.c);
+      await sleep(220); msg('No match there — try another swap.'); busy = false; return;
+    }
+    moves--; updateHud();
+    let extra = new Set();
+    if (bomb) {
+      const bt = a.s === 'b' ? a : b, other = bt === a ? b : a;
+      if (other.s === 'b') { for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) extra.add(i + ',' + j); }
+      else { extra.add(bt.r + ',' + bt.c); for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (grid[i][j] && grid[i][j].t === other.t) extra.add(i + ',' + j); }
+      const n = await clearCells(extra, []); addScore(n * 15); await gravity();
+    }
+    await resolve([[r1, c1], [r2, c2]]);
+    if (!hasMove() && score < goal && moves > 0) { msg('No moves left — shuffling!'); await sleep(500); newBoard(); }
+    busy = false;
+    check();
+  }
+  function check() {
+    if (score >= goal) { over = true; showOverlay(true); }
+    else if (moves <= 0) { over = true; showOverlay(false); }
+  }
+  function showOverlay(win) {
+    $('cm-ovIcon').textContent = win ? '🎉' : '😢';
+    $('cm-ovTitle').textContent = win ? 'Level ' + level + ' cleared!' : 'Out of moves';
+    $('cm-ovText').textContent = win ? 'Score: ' + score + ' — nice matching!' : 'You scored ' + score + ' of ' + goal + '. Give it another go!';
+    $('cm-ovBtn').textContent = win ? 'Next level ▶' : 'Try again';
+    $('cm-ovBtn').dataset.win = win ? '1' : '0';
+    $('cm-overlay').hidden = false;
+  }
+  function startLevel() {
+    over = false; busy = false; score = 0; selected = null; goal = goalFor(level); moves = movesFor(level);
+    $('cm-overlay').hidden = true; msg('Swipe or tap two neighbouring candies.');
+    newBoard(); updateHud();
+  }
+  $('cm-ovBtn').addEventListener('click', () => { if ($('cm-ovBtn').dataset.win === '1') level++; startLevel(); });
+  screen.addEventListener('game:show', () => { level = 1; startLevel(); });
+
+  /* ---- input: swipe or tap-tap ---- */
+  function tileFromEvent(e) { const el = e.target.closest && e.target.closest('.cm-tile'); return el ? el._tile : null; }
+  board.addEventListener('pointerdown', (e) => {
+    if (busy || over) return;
+    const t = tileFromEvent(e); if (!t) return;
+    drag = { t, x: e.clientX, y: e.clientY, done: false };
+    try { board.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  board.addEventListener('pointermove', (e) => {
+    if (!drag || drag.done || busy || over) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y, th = board.clientWidth / N * 0.35;
+    if (Math.abs(dx) < th && Math.abs(dy) < th) return;
+    drag.done = true;
+    const dr = Math.abs(dy) > Math.abs(dx) ? Math.sign(dy) : 0, dc = dr ? 0 : Math.sign(dx);
+    const r2 = drag.t.r + dr, c2 = drag.t.c + dc;
+    if (inb(r2, c2) && grid[r2][c2]) trySwap(drag.t, grid[r2][c2]);
+  });
+  board.addEventListener('pointerup', () => {
+    if (!drag) return; const d = drag; drag = null;
+    if (d.done || busy || over) return;
+    if (!selected) { select(d.t); return; }
+    if (selected === d.t) { select(null); return; }
+    if (Math.abs(selected.r - d.t.r) + Math.abs(selected.c - d.t.c) === 1) trySwap(selected, d.t);
+    else select(d.t);
+  });
+  board.addEventListener('pointercancel', () => { drag = null; });
+})();
+</script>
+
 </body>
 </html>
 
@@ -7887,7 +8190,7 @@ const PICS = [
     const row = document.getElementById('recentGamesRow');
     const wrap = document.getElementById('recentGamesWrap');
     if (!row || !wrap) return;
-    const list = getRecent();
+    const list = getRecent().filter(g => g.id !== 'screen-fishing');
     if (!list.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     row.innerHTML = list.map(g =>
