@@ -2354,6 +2354,22 @@
   .cm-card p { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
   .cm-card .again-btn, .cm-card .home-btn { display: block; width: 100%; margin: 8px 0 0; }
 </style>
+<style id="open-rooms-css">
+  .or-wrap { margin-top: 16px; }
+  .or-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14px; color: #fff; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .or-empty { font-size: 12.5px; color: var(--muted); padding: 10px 12px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.18); text-align: center; }
+  .or-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; margin: 0 0 8px; padding: 10px 12px; border-radius: 14px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: var(--ink); cursor: pointer; font-family: inherit; }
+  .or-row:active { transform: scale(0.98); }
+  .or-main { flex: 1; min-width: 0; }
+  .or-code { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #fff; }
+  .or-sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .or-badge { flex: none; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
+  .or-badge.wait { background: rgba(76,175,125,0.2); color: #7be0ab; border: 1px solid rgba(76,175,125,0.45); }
+  .or-badge.play { background: rgba(255,193,7,0.18); color: #ffd666; border: 1px solid rgba(255,193,7,0.45); }
+  .or-badge.over { background: rgba(255,255,255,0.08); color: var(--muted); border: 1px solid rgba(255,255,255,0.2); }
+  .or-join { flex: none; font-size: 12px; font-weight: 700; color: #fff; }
+</style>
 </head>
 <body>
   <!-- Floating pending-receipts counter — visible on every screen (not just the
@@ -3061,6 +3077,7 @@
       <p class="ipon-error" id="snkJoinError"></p>
       <button class="action-btn" id="snkJoinSubmit">Join</button>
       <button class="skip-btn" id="snkGoCreate" type="button">➕ Open a new table</button>
+      <div class="or-wrap" id="snkOpenRooms"></div>
       <button class="skip-btn" id="snkJoinBack">← Back</button>
     </div>
 
@@ -3160,6 +3177,8 @@
         </div>
         <div class="det-section-title">📋 FINAL RESULTS</div>
         <div class="det-suspect-grid" id="snkFinalList"></div>
+        <button class="action-btn" id="snkNewRaceBtn" type="button" style="display:none; margin-top:12px;">🔁 Start a new race (everyone waiting joins)</button>
+        <p class="admin-note" id="snkNewRaceNote" style="display:none; text-align:center;">Waiting for the host to start a new race…</p>
       </div>
 
       <div class="det-voice-panel" id="snkVoicePanelGame">
@@ -3226,6 +3245,7 @@
       <p class="ipon-error" id="bngJoinError"></p>
       <button class="action-btn" id="bngJoinSubmit">Join</button>
       <button class="skip-btn" id="bngGoCreate" type="button">➕ Open a new room</button>
+      <div class="or-wrap" id="bngOpenRooms"></div>
     </div>
 
     <!-- ========== SUB-VIEW: HOW MANY CARDS ========== -->
@@ -4150,6 +4170,7 @@
     <p class="ipon-error" id="detJoinError"></p>
     <button class="action-btn" id="detJoinSubmit">Join</button>
     <button class="skip-btn" id="detGoCreate" type="button">➕ Open a new case</button>
+    <div class="or-wrap" id="detOpenRooms"></div>
     <button class="skip-btn" id="detJoinBack">← Back</button>
   </div>
 
@@ -10747,12 +10768,19 @@ const PICS = [
       const snap = await get(ref(db, 'detectiveRooms/' + code));
       if (!snap.exists()) { errEl.textContent = '❌ No case found with that code.'; errEl.style.display = 'block'; return; }
       const data = snap.val();
-      if (data.started) { errEl.textContent = '❌ This case has already started.'; errEl.style.display = 'block'; return; }
       const playerCount = Object.keys(data.players || {}).length;
       if (playerCount >= 50) { errEl.textContent = '❌ Case is full.'; errEl.style.display = 'block'; return; }
-      await update(ref(db, 'detectiveRooms/' + code + '/players/' + myId), { name: name, ready: true, team: null });
+      let joinTeam = null;
+      if (data.started) {
+        // Joining mid-case: balance onto the smaller team, and sit out until the next round.
+        const ps = Object.values(data.players || {}).filter((x) => x && !x.left);
+        const a = ps.filter((x) => x.team === 'A').length, b = ps.filter((x) => x.team === 'B').length;
+        joinTeam = a <= b ? 'A' : 'B';
+      }
+      await update(ref(db, 'detectiveRooms/' + code + '/players/' + myId), { name: name, ready: true, team: joinTeam, left: null });
       setDetSession(code, name, false);
       enterDetRoom(code);
+      if (data.started) gateToast('⏳ Round in progress — you can watch now and take part from the next round.');
     } catch (e) {
       errEl.textContent = 'Connection problem. Please try again.';
       errEl.style.display = 'block';
@@ -11052,6 +11080,7 @@ const PICS = [
       await update(ref(db, 'detectiveRooms/' + session.room), {
         ['roundResults/' + round]: { verdictVotes: votes },
         round: round + 1,
+        order: Object.keys(lastDetRoomData.players || {}).filter((id) => { const pl = lastDetRoomData.players[id]; return pl && !pl.left; }),
         closed: false,
         verdictVotes: null,
         turnIndex: 0,
@@ -11750,7 +11779,6 @@ const PICS = [
       const snap = await get(ref(db, 'snakeRooms/' + code));
       if (!snap.exists()) { errEl.textContent = '❌ No table found with that code.'; errEl.style.display = 'block'; return; }
       const data = snap.val();
-      if (data.started) { errEl.textContent = '❌ This table has already started.'; errEl.style.display = 'block'; return; }
       const playerCount = Object.keys(data.players || {}).length;
       if (playerCount >= SNK_MAX_PLAYERS) { errEl.textContent = '❌ Table is full.'; errEl.style.display = 'block'; return; }
       // The checks above are just for a fast, friendly error message — the
@@ -11760,10 +11788,12 @@ const PICS = [
       // slip in past the player cap.
       const result = await runTransaction(ref(db, 'snakeRooms/' + code), (room) => {
         if (!room) return room; // room vanished — abort
-        if (room.started) return; // abort: started in the meantime
         const players = room.players || {};
         if (!players[myId] && Object.keys(players).length >= SNK_MAX_PLAYERS) return; // abort: filled up meanwhile
-        const newPlayers = Object.assign({}, players, { [myId]: { name: name, ready: true, team: null, position: 0, finished: false } });
+        // Joining while a race is running = wait on the sidelines until the next race.
+        const joinEntry = { name: name, ready: true, team: null, position: 0, finished: false };
+        if (room.started) joinEntry.waiting = true;
+        const newPlayers = Object.assign({}, players, { [myId]: joinEntry });
         return Object.assign({}, room, { players: newPlayers });
       });
       if (!result || !result.committed) {
@@ -11884,6 +11914,22 @@ const PICS = [
     } catch (e) {
       gateToast('❌ Connection problem — try again.');
     }
+  });
+
+  if ($('snkNewRaceBtn')) $('snkNewRaceBtn').addEventListener('click', async () => {
+    const session = getSnkSession();
+    if (!session.room) return;
+    try {
+      await runTransaction(ref(db, 'snakeRooms/' + session.room), (room) => {
+        if (!room || !room.closed) return; // only restart a finished race
+        const fresh = {};
+        Object.entries(room.players || {}).forEach(([id, p]) => {
+          if (!p || p.left) return;
+          fresh[id] = { name: p.name, ready: true, team: p.team || null, position: 0, finished: false };
+        });
+        return Object.assign({}, room, { players: fresh, started: false, closed: false, order: null, turnIndex: 0 });
+      });
+    } catch (e) { gateToast('❌ Connection problem — try again.'); }
   });
 
   /* ---------- turn helpers ---------- */
@@ -12040,6 +12086,7 @@ const PICS = [
     const status = $('snkStatus');
     if (status && !snkRolling) {
       if (closed) status.textContent = '🏁 The race is over!';
+      else if (myEntry && myEntry.waiting && !order.includes(myId)) status.textContent = '⏳ A race is in progress — you\'ll play in the next race. Enjoy watching!';
       else if (myLeft) status.textContent = "You've left this table.";
       else if (myFinished) status.textContent = "You're done — waiting for the others to finish.";
       else if (isMyTurn) status.textContent = 'You\'re on tile ' + (players[myId].position || 0) + '. Roll the dice!';
@@ -12062,6 +12109,10 @@ const PICS = [
     if (closed && finalPanel) {
       finalPanel.hidden = false;
       const winner = totals.A === totals.B ? null : (totals.A > totals.B ? SNK_TEAMS.A : SNK_TEAMS.B);
+      const hostGone = !players[data.hostId] || players[data.hostId].left;
+      const canRestart = data.hostId === myId || (hostGone && !myLeft);
+      if ($('snkNewRaceBtn')) $('snkNewRaceBtn').style.display = canRestart ? 'block' : 'none';
+      if ($('snkNewRaceNote')) $('snkNewRaceNote').style.display = canRestart ? 'none' : 'block';
       $('snkFinalHeadline').textContent = (totals.A === 0 && totals.B === 0) ? '🏁 RACE COMPLETE!' : (winner ? winner.icon + ' ' + winner.name + ' WINS THE TABLE!' : "🤝 IT'S A TIE!");
       $('snkFinalScores').textContent = SNK_TEAMS.A.icon + ' ' + SNK_TEAMS.A.name + ': ' + peso(totals.A) + '   —   ' + SNK_TEAMS.B.icon + ' ' + SNK_TEAMS.B.name + ': ' + peso(totals.B);
       $('snkFinalList').innerHTML = order.map((id) => {
@@ -12831,7 +12882,7 @@ const BNG_MARK_SRC = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAY
           }
           // Cancel: fall through to the normal paid-rejoin-with-new-card flow below.
         }
-        const ok = confirm('You already played in Room ' + code + ' and left. Rejoin with a new card? You\'ll need to pay again and wait for the admin to approve before you\'re back in the game.');
+        const ok = confirm('You already played in Room ' + code + ' and left. Rejoin with a new card? Your new card will be played from the next round.');
         if (!ok) return;
       }
       // Just a pre-check for fast feedback — the real slot-reservation happens
@@ -14889,4 +14940,74 @@ const BNG_MARK_SRC = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAY
       });
     });
   }
+
+  /* ============ OPEN ROOMS LIST (Snake & Ladder / Detective / Bingo) ============
+     Live list of rooms that are open right now, with their status, so players can see
+     who is still playing and join to wait for the round to end. */
+  (function setupOpenRooms() {
+    const GAMES = [
+      { path: 'snakeRooms', screen: 'screen-snake', list: 'snkOpenRooms', code: 'snkJoinCode', name: 'snkJoinName', join: 'snkJoinSubmit', max: () => SNK_MAX_PLAYERS, noun: 'Table', icon: '🐍',
+        state: (r) => r.closed ? 'over' : (r.started ? 'play' : 'wait'), round: () => '' },
+      { path: 'detectiveRooms', screen: 'screen-detective', list: 'detOpenRooms', code: 'detJoinCode', name: 'detJoinName', join: 'detJoinSubmit', max: () => 50, noun: 'Case', icon: '🕵️',
+        state: (r) => r.started ? (r.closed ? 'over' : 'play') : 'wait', round: (r) => r.started ? ' · Round ' + ((r.round || 0) + 1) : '' },
+      { path: 'bingoRooms', screen: 'screen-bingo', list: 'bngOpenRooms', code: 'bngJoinCode', name: 'bngJoinName', join: 'bngJoinSubmit', max: () => BNG_MAX_PLAYERS, noun: 'Room', icon: '🎱',
+        state: (r) => r.closed ? 'over' : (r.started ? 'play' : 'wait'), round: (r) => r.started ? ' · Round ' + (r.roundNumber || 1) : '' }
+    ];
+    const LABEL = { wait: '🟢 Open', play: '🟡 Playing', over: '🏁 Round over' };
+    const HINT = { wait: 'Tap to join', play: 'Join & wait for the round to end', over: 'Join for the next round' };
+    const MAX_AGE = 12 * 60 * 60 * 1000;
+
+    GAMES.forEach((g) => {
+      const screen = document.getElementById(g.screen);
+      const box = document.getElementById(g.list);
+      if (!screen || !box) return;
+      let unsub = null, mo = null;
+
+      function render(val) {
+        const now = Date.now();
+        const rooms = Object.entries(val || {}).map(([code, r]) => {
+          const players = Object.values((r && r.players) || {}).filter((p) => p && !p.left);
+          return { code, r, players };
+        }).filter((x) => x.r && x.players.length > 0 && !(typeof x.r.createdAt === 'number' && now - x.r.createdAt > MAX_AGE))
+          .sort((a, b) => (b.r.createdAt || 0) - (a.r.createdAt || 0));
+        let html = '<div class="or-title">📡 Open ' + g.noun.toLowerCase() + 's right now</div>';
+        if (!rooms.length) {
+          html += '<div class="or-empty">No open ' + g.noun.toLowerCase() + 's yet — be the first to open one!</div>';
+        } else {
+          html += rooms.map(({ code, r, players }) => {
+            const st = g.state(r);
+            const host = (r.players && r.players[r.hostId] && r.players[r.hostId].name) || (players[0] && players[0].name) || 'Host';
+            const full = players.length >= g.max();
+            return '<button type="button" class="or-row" data-code="' + escapeHtml(code) + '"' + (full ? ' disabled style="opacity:.55"' : '') + '>' +
+              '<span style="font-size:22px">' + g.icon + '</span>' +
+              '<span class="or-main"><span class="or-code">' + escapeHtml(code) + '</span>' +
+              '<span class="or-sub" style="display:block">Host: ' + escapeHtml(host) + ' · 👥 ' + players.length + '/' + g.max() + escapeHtml(g.round(r)) + '</span>' +
+              '<span class="or-sub" style="display:block">' + (full ? 'Full' : HINT[st]) + '</span></span>' +
+              '<span class="or-badge ' + st + '">' + LABEL[st] + '</span></button>';
+          }).join('');
+        }
+        box.innerHTML = html;
+      }
+
+      function stop() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; } if (mo) { mo.disconnect(); mo = null; } }
+      function start() {
+        stop();
+        unsub = onValue(ref(db, g.path), (snap) => render(snap.val()), () => { box.innerHTML = ''; });
+        // stop listening as soon as this screen is no longer showing
+        mo = new MutationObserver(() => { if (!screen.classList.contains('active')) stop(); });
+        mo.observe(screen, { attributes: true, attributeFilter: ['class'] });
+      }
+      screen.addEventListener('game:show', start);
+
+      box.addEventListener('click', (e) => {
+        const row = e.target.closest('.or-row');
+        if (!row || row.disabled) return;
+        const codeEl = document.getElementById(g.code), nameEl = document.getElementById(g.name), joinBtn = document.getElementById(g.join);
+        if (!codeEl) return;
+        codeEl.value = row.dataset.code;
+        if (nameEl && nameEl.value.trim()) { if (joinBtn) joinBtn.click(); }
+        else { if (nameEl) nameEl.focus(); gateToast('✏️ Type your name, then tap Join.'); }
+      });
+    });
+  })();
 </script>
